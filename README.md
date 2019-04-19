@@ -11,6 +11,11 @@ The current setup is for a 23" 1080p monitior using chrome with a favorites bar 
 
 The application will not automatically sign for your bets so you need to bet once yourself setting how long you wish it to automatically sign for - this is a nice fail safe to stop betting if you forget to come back to your PC!
 
+Within the `dist` folder you will find the published version of the application there are three important files:
+1. `appsettings.json` file which you should edit after reading below
+1. `functions.ahk` contains all the AutoHotKey functions you will edit this if you have a different setup to the one stated above
+1. `Tronbet.AutoBet.Moon.exe` this will run the application.
+
 ## Settings
 `appsettings.json` contains the values used to bet make sure you understand each one before running the application!
 
@@ -44,3 +49,14 @@ The maximum number of winners (moons equal to or over your set multiplier) in X 
 
 If I only want to bet if there are less than 11 'winners' in the last 50 moons I would set `MaxNumberOfWinners` to 10 and `MaxNumberOfWinnersInHowManyRecords` to 50
 
+#### [Video of it in action](https://youtu.be/VNX9yhrxkTg)
+
+## Feedback
+Any feedback or suggestions are welcome submit an issue or create a pull request with the change.
+
+### Won big? tips are welcome - TD4991Vc6fAPW4CpGEqAWQkHnZd346Cmbp
+
+# Links
+- [AutoHotkey.Interop](https://github.com/amazing-andrew/AutoHotkey.Interop) .NET wrapper for AutoHotKey
+- [AutoHotKey](https://www.autohotkey.com/)
+- [Dotnet Core](https://github.com/dotnet/core)
