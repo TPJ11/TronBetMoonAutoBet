@@ -49,6 +49,8 @@ The maximum number of winners (moons equal to or over your set multiplier) in X 
 
 If I only want to bet if there are less than 11 'winners' in the last 50 moons I would set `MaxNumberOfWinners` to 10 and `MaxNumberOfWinnersInHowManyRecords` to 50
 
+#### [Video of it in action](https://youtu.be/VNX9yhrxkTg)
+
 ## Feedback
 Any feedback or suggestions are welcome submit an issue or create a pull request with the change.
 
