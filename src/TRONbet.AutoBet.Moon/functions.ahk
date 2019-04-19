@@ -48,7 +48,6 @@ CurrentStatus()
 	Send,{CTRL Down}c{CTRL Up}
 	Sleep, 50
 	Return,  %clipboard%
-
 }
 
 GetBalance()

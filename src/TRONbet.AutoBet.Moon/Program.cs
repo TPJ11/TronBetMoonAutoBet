@@ -12,8 +12,8 @@ namespace TRONbet.AutoBet.Moon
     class Program
     {
         private static readonly List<MoonResults> _history = new List<MoonResults>();
-        private static readonly AutoHotkeyEngine _ahk = AutoHotkeyEngine.Instance;
         private static IAppSettings _appSettings;
+        private static IAhkFunctions _ahkFunctions;
               
         private static int CurrentBetCount = 0;
         private static int CurrentResetCount = 0;        
@@ -34,7 +34,7 @@ namespace TRONbet.AutoBet.Moon
                 Console.ReadKey();
                 Console.Write("Running...");
                 Thread.Sleep(2000);
-                _ahk.ExecFunction("Test");
+                _ahkFunctions.Test();
                 Console.Write("Done.");
             }
             else
@@ -70,7 +70,7 @@ namespace TRONbet.AutoBet.Moon
                 await WaitTilCanBet(17);
 
                 Console.Write($"Setting mutiplier to {_appSettings.Multiplier}x...");
-                SetMultiplier();
+                _ahkFunctions.SetMultiplier(_appSettings.Multiplier);
                 Console.Write("Done.");
                 Console.WriteLine("");
 
@@ -80,7 +80,7 @@ namespace TRONbet.AutoBet.Moon
                 {
                     _history.Add(new MoonResults()
                     {
-                        Multiplier = ReadHistory(i),
+                        Multiplier = _ahkFunctions.ReadHistory(i),
                         Timestamp = DateTime.Now
                     });
                 }
@@ -94,7 +94,7 @@ namespace TRONbet.AutoBet.Moon
                 {
                     await WaitTilCanBet(7);
 
-                    var lastMoon = ReadHistory(1);
+                    var lastMoon = _ahkFunctions.ReadHistory(1);
 
                     _history.Add(new MoonResults()
                     {
@@ -144,7 +144,7 @@ namespace TRONbet.AutoBet.Moon
             var serviceProvider = services.BuildServiceProvider();
 
             _appSettings = serviceProvider.GetService<IAppSettings>();
-            _ahk.LoadFile("functions.ahk");
+            _ahkFunctions = serviceProvider.GetService<IAhkFunctions>();
         }
 
         private static void ConfigureServices(IServiceCollection services)
@@ -155,7 +155,8 @@ namespace TRONbet.AutoBet.Moon
 
             var configuration = builder.Build();
             services.AddSingleton<IConfiguration>(configuration);
-            services.AddTransient<IAppSettings, AppSettings>();
+            services.AddSingleton<IAppSettings, AppSettings>();
+            services.AddSingleton<IAhkFunctions, AhkFunctions>();
         }
 
         #endregion
@@ -172,7 +173,7 @@ namespace TRONbet.AutoBet.Moon
             {
                 await WaitTilCanBet(7);
 
-                var lastMoon = ReadHistory(1);
+                var lastMoon = _ahkFunctions.ReadHistory(1);
 
                 if (lastMoon >= _appSettings.Multiplier)
                 {
@@ -193,26 +194,6 @@ namespace TRONbet.AutoBet.Moon
         }
 
         /// <summary>
-        /// Gets the given line number mutiplier in the history table
-        /// </summary>
-        /// <param name="lineNumber">Line number to read</param>
-        /// <returns>Multiplier</returns>
-        private static decimal ReadHistory(int lineNumber)
-        {
-            var number = _ahk.ExecFunction("ReadHistory", lineNumber.ToString());
-
-            if(string.IsNullOrWhiteSpace(number))
-                throw new Exception($"Unable to read result for line number #{lineNumber}");
-
-            number = number.Substring(0, number.Length - 1);
-
-            if (decimal.TryParse(number, out var result))
-                return result;
-
-            throw new Exception($"Unable to convert result for line number #{lineNumber} to a number");
-        }
-
-        /// <summary>
         /// Waits until the current round is over and can send new bet
         /// </summary>
         /// <param name="minTimeLeftToBet">Min value left on the clock to allow a bet</param>
@@ -224,7 +205,7 @@ namespace TRONbet.AutoBet.Moon
 
             while (1 == 1)
             {
-                var timeLeft = GetTimeLeftToBet();
+                var timeLeft = _ahkFunctions.GetTimeLeftToBet();
 
                 if (!minTimeLeftToBet.HasValue || timeLeft > minTimeLeftToBet)
                 {
@@ -234,30 +215,7 @@ namespace TRONbet.AutoBet.Moon
 
                 await Task.Delay(1000);
             }
-        }
-
-        /// <summary>
-        /// Gets the current time left to bet
-        /// </summary>
-        /// <returns>Amount of time left to bet, if -1 not currently able to bet</returns>
-        private static decimal GetTimeLeftToBet()
-        {
-            var currentStatus = _ahk.ExecFunction("CurrentStatus");
-            if (!string.IsNullOrWhiteSpace(currentStatus))
-            {
-                currentStatus = currentStatus.Trim();
-                if (currentStatus.ToCharArray().Last() == 's')
-                {
-                    var sTimeLeft = currentStatus.Substring(0, currentStatus.Count() - 1);
-                    if (decimal.TryParse(sTimeLeft, out var timeLeft))
-                    {
-                        return timeLeft;
-                    }
-                }
-            }
-
-            return -1;
-        }
+        }        
 
         /// <summary>
         /// Checks to see if the last game was a winner
@@ -305,23 +263,23 @@ namespace TRONbet.AutoBet.Moon
             await Task.Delay(2000);
 
             // Check we have the trx left to bet with
-            if (GetBalance() < betAmount)
+            if (_ahkFunctions.GetBalance() < betAmount)
                 throw new Exception("Run out of TRX!");
 
             // Check it was set correctly 
-            if (GetMultiplier() != _appSettings.Multiplier)
+            if (_ahkFunctions.GetMultiplier() != _appSettings.Multiplier)
                 throw new Exception("Failed to set multiplier correctly");
 
             // Set the bet
-            SetBetAmount(betAmount);
+            _ahkFunctions.SetBetAmount(betAmount);
             await Task.Delay(500);
             // Check it was set correctly 
-            if (GetBetAmount() != betAmount)
+            if (_ahkFunctions.GetBetAmount() != betAmount)
                 throw new Exception("Failed to set bet correctly");
 
             if (_appSettings.Mode == Enums.Modes.Bet)
             {
-                _ahk.ExecFunction("ClickBet");
+                _ahkFunctions.ClickBet();
                 Console.Write($"Placed bet worth {betAmount} TRX...");
             }
             else
@@ -341,59 +299,6 @@ namespace TRONbet.AutoBet.Moon
         /// <param name="numberToLookBack">Number of records to look back if null will use all history</param>
         /// <returns>Total number of successful spins in the list</returns>
         private static int TotalSuccesses(int? numberToLookBack = null) => numberToLookBack is null ? _history.Count(x => x.Multiplier >= _appSettings.Multiplier)
-                : _history.TakeLast(numberToLookBack.Value).Count(x => x.Multiplier >= _appSettings.Multiplier);
-
-        /// <summary>
-        /// Gets the current TRX balance in wallet
-        /// </summary>
-        /// <returns>Current TRX balance</returns>
-        private static decimal GetBalance()
-        {
-            var sBalance = _ahk.ExecFunction("GetBalance");
-
-            if (decimal.TryParse(sBalance, out var balance))
-                return balance;
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Gets the currently set bet amount
-        /// </summary>
-        /// <returns>Current set bet amount</returns>
-        private static decimal GetBetAmount()
-        {
-            var sBetAmount = _ahk.ExecFunction("GetBetAmount");
-
-            if (decimal.TryParse(sBetAmount, out var bet))
-                return bet;
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Sets the bet amount
-        /// </summary>
-        /// <param name="bet">Amount to set bet to</param>
-        private static void SetBetAmount(decimal bet) => _ahk.ExecFunction("SetBetAmount", bet.ToString());
-
-        /// <summary>
-        /// Gets the currently set multiplier
-        /// </summary>
-        /// <returns>Currently set mutiplier</returns>
-        private static decimal GetMultiplier()
-        {
-            var sBetAmount = _ahk.ExecFunction("GetMultiplier");
-
-            if (decimal.TryParse(sBetAmount, out var bet))
-                return bet;
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Sets the multiplier - uses value set in configuration
-        /// </summary>
-        private static void SetMultiplier() => _ahk.ExecFunction("SetMultiplier", _appSettings.Multiplier.ToString());
+                : _history.TakeLast(numberToLookBack.Value).Count(x => x.Multiplier >= _appSettings.Multiplier);        
     }
 }
