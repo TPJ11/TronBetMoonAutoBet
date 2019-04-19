@@ -88,6 +88,14 @@ namespace TRONbet.AutoBet.Moon
                 Console.Write("Done.");
                 Console.WriteLine("");
 
+                Console.WriteLine($"What till next winner? Y / N");
+                var answer = Console.ReadLine();
+
+                Thread.Sleep(2000);
+
+                if (answer.ToLower() == "y")                
+                    await WaitTilNextWin();                
+
                 var didBet = false;
 
                 while (1 == 1)
