@@ -44,9 +44,10 @@ CurrentStatus()
 	Click
 	Click
 	Click
+	Sleep, 100
 	clipboard =
 	Send,{CTRL Down}c{CTRL Up}
-	Sleep, 50
+	Sleep, 100
 	Return,  %clipboard%
 }
 
@@ -58,9 +59,10 @@ GetBalance()
 	Click
 	Click
 	Click
+	Sleep, 100
 	clipboard =
 	Send,{CTRL Down}c{CTRL Up}
-	Sleep, 50
+	Sleep, 100
 	Return,  %clipboard%
 }
 
@@ -72,9 +74,10 @@ GetBetAmount()
 	Click
 	Click
 	Click
+	Sleep, 100
 	clipboard =
 	Send,{CTRL Down}c{CTRL Up}
-	Sleep, 50
+	Sleep, 100
 	Return,  %clipboard%
 }
 
@@ -86,7 +89,9 @@ SetBetAmount(bet)
 	Click
 	Click
 	Click
+	Sleep, 100
 	Send, %bet%
+	Sleep, 100
 }
 
 GetMultiplier()
@@ -97,9 +102,10 @@ GetMultiplier()
 	Click
 	Click
 	Click
+	Sleep, 100
 	clipboard =
 	Send,{CTRL Down}c{CTRL Up}
-	Sleep, 50
+	Sleep, 100
 	Return,  %clipboard%
 }
 
@@ -111,5 +117,7 @@ SetMultiplier(multiplier)
 	Click
 	Click
 	Click
+	Sleep, 100
 	Send, %multiplier%
+	Sleep, 100
 }

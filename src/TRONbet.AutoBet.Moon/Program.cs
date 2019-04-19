@@ -67,7 +67,7 @@ namespace TRONbet.AutoBet.Moon
                 Thread.Sleep(2000);
 
                 Console.WriteLine("Waitting till end of current round");
-                await WaitTilCanBet(17);
+                await WaitTilCanBet(15);
 
                 Console.Write($"Setting mutiplier to {_appSettings.Multiplier}x...");
                 _ahkFunctions.SetMultiplier(_appSettings.Multiplier);
@@ -213,7 +213,7 @@ namespace TRONbet.AutoBet.Moon
                     break;
                 }
 
-                await Task.Delay(1000);
+                await Task.Delay(2000);
             }
         }        
 
@@ -231,13 +231,17 @@ namespace TRONbet.AutoBet.Moon
         {
             // If there are 5 or more successful bets in the last 50 spins we don't bet
             if (TotalSuccesses(_appSettings.MaxNumberOfWinnersInHowManyRecords) > _appSettings.MaxNumberOfWinners)
+            {
+                Console.Write("To many winners....");
                 return false;
+            }
 
-            // If the current bet is maxed out we will be resetting on the net bet
+            // If the current bet is maxed out we will be resetting on the next bet
             // so we need to check to see if we have reached our limit for resets
             if (CurrentBetCount >= _appSettings.Bets.Count()
                 && CurrentResetCount >= _appSettings.MaxNumberOfResets)
             {
+                Console.WriteLine("Hit limit for resets....");
                 return false;
             }
 
@@ -268,7 +272,7 @@ namespace TRONbet.AutoBet.Moon
 
             // Check it was set correctly 
             if (_ahkFunctions.GetMultiplier() != _appSettings.Multiplier)
-                throw new Exception("Failed to set multiplier correctly");
+                throw new Exception("Multiplier is the incorrect value");
 
             // Set the bet
             _ahkFunctions.SetBetAmount(betAmount);

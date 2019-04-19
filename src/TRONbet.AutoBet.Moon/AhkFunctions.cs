@@ -116,6 +116,14 @@ namespace TRONbet.AutoBet.Moon
 
             if (decimal.TryParse(sBalance, out var balance))
                 return balance;
+            else
+            {
+                // Try again
+                sBalance = _ahk.ExecFunction("GetBalance");
+
+                if (decimal.TryParse(sBalance, out var balance2))
+                    return balance2;
+            }
 
             return -1;
         }
